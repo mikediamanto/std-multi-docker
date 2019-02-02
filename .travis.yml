@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mikediamanto/react-test -f ./client/Dockerfile.dev ./client
+script:
+  - docker run mikediamanto/react-test npm run test -- --coverage
+
+after_success:
+  - docker build -t mikediamanto/multi-client ./client
+  - docker build -t mikediamanto/multi-nginx ./nginx
+  - docker build -t mikediamanto/multi-server ./server
+  - docker build -t mikediamanto/multi-worker ./worker
+  
+  #Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #push image to docker hub
+  - docker push mikediamanto/multi-client
+  - docker push mikediamanto/multi-nginx 
+  - docker push mikediamanto/multi-server
+  - docker push mikediamanto/multi-worker
